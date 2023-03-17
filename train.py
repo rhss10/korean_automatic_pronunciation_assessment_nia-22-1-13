@@ -143,8 +143,8 @@ if __name__ == "__main__":
 
     train_ds = train_ds.map(prepare_dataset)
     valid_ds = valid_ds.map(prepare_dataset)
-    train_ds = train_ds.rename_column("comprehensibility_score", "labels")
-    valid_ds = valid_ds.rename_column("comprehensibility_score", "labels")
+    train_ds = train_ds.rename_column("compreh", "labels")
+    valid_ds = valid_ds.rename_column("compreh", "labels")
 
     mse_metric = load_metric("mse")
     pcc_metric = load_metric("pearsonr")
