@@ -1,0 +1,11 @@
+tensorboard
+tensorboardX
+jiwer
+soundfile
+ffmpeg<5
+addict
+torchaudio
+librosa
+datasets
+transformers
+evaluate
