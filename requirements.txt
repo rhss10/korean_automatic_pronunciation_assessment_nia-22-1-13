@@ -6,6 +6,6 @@ ffmpeg<5
 addict
 torchaudio
 librosa
-datasets
+datasets==2.8.0
 transformers
 evaluate
