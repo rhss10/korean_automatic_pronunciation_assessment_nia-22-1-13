@@ -6,27 +6,31 @@ from datasets import Audio, concatenate_datasets, load_dataset, load_from_disk
 train_ds = load_dataset(
     "csv",
     delimiter=",",
-    data_files="/data1/nia13/eu/compreh/train.csv",
+    data_files="/data2/rhss10/speech_corpus/NIA-13/nia13/asia/compreh/train.csv",
     # column_names=["audio", "text", "comprehensibility_score"],
     split="train",
 )
 valid_ds = load_dataset(
     "csv",
     delimiter=",",
-    data_files="/data1/nia13/eu/compreh/val.csv",
+    data_files="/data2/rhss10/speech_corpus/NIA-13/nia13/asia/compreh/val.csv",
     # column_names=["audio", "text", "comprehensibility_score"],
     split="train",
 )
 test_ds = load_dataset(
     "csv",
     delimiter=",",
-    data_files="/data1/nia13/eu/compreh/test.csv",
+    data_files="/data2/rhss10/speech_corpus/NIA-13/nia13/asia/compreh/test.csv",
     # column_names=["audio", "text", "comprehensibility_score"],
     split="train",
 )
 
 
 # make audio sampling rate into 16KHz and filter out audio frames bigger than 17 sec
+train_ds = train_ds.map(lambda x: {'path': "/data2/rhss10/speech_corpus/NIA-13/nia13" + x['path'].split('nia13')[-1]})
+valid_ds = valid_ds.map(lambda x: {'path': "/data2/rhss10/speech_corpus/NIA-13/nia13" + x['path'].split('nia13')[-1]})
+test_ds = test_ds.map(lambda x: {'path': "/data2/rhss10/speech_corpus/NIA-13/nia13" + x['path'].split('nia13')[-1]})
+
 train_ds = train_ds.map(lambda x: {'audio': x['path']})
 valid_ds = valid_ds.map(lambda x: {'audio': x['path']})
 test_ds = test_ds.map(lambda x: {'audio': x['path']})

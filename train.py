@@ -49,7 +49,7 @@ def prepare_arguments():
     parser.add_argument("--lr_scheduler_type", type=str, default="linear")
     parser.add_argument("--warmup_ratio", type=float, default=0.1)
     parser.add_argument("--num_train_epochs", type=int, default=30)
-    parser.add_argument("--metric_for_best_model", type=str, default="eval_mse")
+    parser.add_argument("--metric_for_best_model", type=str, default="eval_pearsonr")
     parser.add_argument(
         "--greater_is_better",
         type=bool,
@@ -66,8 +66,8 @@ def prepare_arguments():
     args.exp_name = f"{args.exp_prefix}_bat{args.per_device_batch_size}_lr{args.learning_rate}_warm{args.warmup_ratio}"
     args.save_dir_path = "./models/" + args.exp_name
     args.save_log_path = "./logs/" + args.exp_name
-    os.makedirs(args.save_dir_path, exist_ok=True)
-    os.makedirs(args.save_log_path, exist_ok=True)
+    os.makedirs(args.save_dir_path, exist_ok=False)
+    os.makedirs(args.save_log_path, exist_ok=False)
 
     return args
 
@@ -116,6 +116,7 @@ def prepare_trainer(args, feature_extractor, train_ds, test_ds):
         load_best_model_at_end=True,
         greater_is_better=args.greater_is_better,
         metric_for_best_model=args.metric_for_best_model,
+        dataloader_num_workers=15,
     )
 
     trainer = Trainer(
