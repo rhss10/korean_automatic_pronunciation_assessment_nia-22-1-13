@@ -36,8 +36,8 @@ def prepare_arguments():
         description=("Train and evaluate the model."),
     )
     parser.add_argument("--num_labels", type=int, default=6)
-    parser.add_argument("--train", type=str, default="./data/train_ds/")
-    parser.add_argument("--test", type=str, default="./data/valid_ds_small/")
+    parser.add_argument("--train", type=str, default="./data/train_cj_ds/")
+    parser.add_argument("--test", type=str, default="./data/valid_cj_ds_small/")
     parser.add_argument("--per_device_batch_size", type=int, default=4)
     parser.add_argument(
         "--model_name_or_path",
@@ -116,6 +116,7 @@ def prepare_trainer(args, feature_extractor, train_ds, test_ds):
         load_best_model_at_end=True,
         greater_is_better=args.greater_is_better,
         metric_for_best_model=args.metric_for_best_model,
+        dataloader_num_workers=15,
     )
 
     trainer = Trainer(
