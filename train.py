@@ -36,8 +36,8 @@ def prepare_arguments():
         description=("Train and evaluate the model."),
     )
     parser.add_argument("--num_labels", type=int, default=6)
-    parser.add_argument("--train", type=str, default="./data/train_ds/")
-    parser.add_argument("--test", type=str, default="./data/valid_ds_small/")
+    parser.add_argument("--train", type=str, default="./data/train_cj_ds/")
+    parser.add_argument("--test", type=str, default="./data/valid_cj_ds_small/")
     parser.add_argument("--per_device_batch_size", type=int, default=4)
     parser.add_argument(
         "--model_name_or_path",
