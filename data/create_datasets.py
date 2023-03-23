@@ -2,7 +2,7 @@ import re
 
 from datasets import Audio, concatenate_datasets, load_dataset, load_from_disk
 
-COUNTRY = 'cj'
+COUNTRY = "cj"
 print(COUNTRY)
 
 # load csv files
@@ -30,9 +30,28 @@ test_ds = load_dataset(
 
 
 # make audio sampling rate into 16KHz and filter out audio frames bigger than 17 sec
-train_ds = train_ds.map(lambda x: {'audio': x['path']})
-valid_ds = valid_ds.map(lambda x: {'audio': x['path']})
-test_ds = test_ds.map(lambda x: {'audio': x['path']})
+train_ds = train_ds.map(
+    lambda x: {
+        "path": "/data2/rhss10/speech_corpus/NIA-13/nia13"
+        + x["path"].split("nia13")[-1]
+    }
+)
+valid_ds = valid_ds.map(
+    lambda x: {
+        "path": "/data2/rhss10/speech_corpus/NIA-13/nia13"
+        + x["path"].split("nia13")[-1]
+    }
+)
+test_ds = test_ds.map(
+    lambda x: {
+        "path": "/data2/rhss10/speech_corpus/NIA-13/nia13"
+        + x["path"].split("nia13")[-1]
+    }
+)
+
+train_ds = train_ds.map(lambda x: {"audio": x["path"]})
+valid_ds = valid_ds.map(lambda x: {"audio": x["path"]})
+test_ds = test_ds.map(lambda x: {"audio": x["path"]})
 train_ds = train_ds.cast_column("audio", Audio(sampling_rate=16000))
 valid_ds = valid_ds.cast_column("audio", Audio(sampling_rate=16000))
 test_ds = test_ds.cast_column("audio", Audio(sampling_rate=16000))

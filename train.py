@@ -66,8 +66,8 @@ def prepare_arguments():
     args.exp_name = f"{args.exp_prefix}_bat{args.per_device_batch_size}_lr{args.learning_rate}_warm{args.warmup_ratio}"
     args.save_dir_path = "./models/" + args.exp_name
     args.save_log_path = "./logs/" + args.exp_name
-    os.makedirs(args.save_dir_path, exist_ok=True)
-    os.makedirs(args.save_log_path, exist_ok=True)
+    os.makedirs(args.save_dir_path, exist_ok=False)
+    os.makedirs(args.save_log_path, exist_ok=False)
 
     return args
 
