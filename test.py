@@ -21,7 +21,7 @@ def collate_fn(batch):
     }
 
 
-def create_cm(preds, labels, name_labels, pcc, split):
+def create_cm(preds, labels, name_labels, pcc, mse, split):
     cm = confusion_matrix(preds, labels, labels=name_labels)
     fig, ax = plt.subplots(figsize=(10, 10))
     heatmap(
@@ -34,14 +34,15 @@ def create_cm(preds, labels, name_labels, pcc, split):
         xticklabels=name_labels,
         yticklabels=name_labels,
         annot_kws={"size": 5},
-        ax=ax[0, 0],
+        ax=ax,
     )
     ax.set(
-        xlabel=f"{split} Pred Labels (PCC:{pcc:.2f})",
+        xlabel=f"{split} Pred Labels (PCC: {pcc['pearsonr']:.2f}, MSE: {mse['mse']:.2f})",
         ylabel=f"{split} Real Labels",
+        title=f"{MODEL}",
     )
-    fig.savefig(f"{MODEL}/{SCORE}_{split}.pdf", bbox_inches="tight")
-    fig.savefig(f"{MODEL}/{SCORE}_{split}.png", bbox_inches="tight")
+    fig.savefig(f"./cm/{SCORE}_{split}.pdf", bbox_inches="tight")
+    fig.savefig(f"./cm/{SCORE}_{split}.png", bbox_inches="tight")
 
 
 # evaluation
@@ -53,34 +54,37 @@ def evaluate_metrics(dataloader, split):
 
     for x in tqdm(dataloader):
         with torch.no_grad():
-            logits = model(
-                x["input_values"].to(device),
-            ).logits
-        preds = torch.argmax(logits, dim=-1).item()
-        pcc_metric.add(prediction=preds, reference=dataloader["labels"])
-        mse_metric.add(prediction=preds, reference=dataloader["labels"])
-        total_preds.extend(preds)
-        total_labels.extend(dataloader["labels"])
+            logits = model(x["input_values"].to(device)).logits
+        preds = torch.argmax(logits, dim=-1)
+        pcc_metric.add_batch(predictions=preds, references=x["labels"])
+        mse_metric.add_batch(predictions=preds, references=x["labels"])
+        total_preds.extend(preds.tolist())
+        total_labels.extend(x["labels"])
 
-    print("PCC:", pcc_metric.compute())
-    print("MSE:", mse_metric.compute())
-    create_cm(total_preds, total_labels, list(range(6)))
+    pcc_res = pcc_metric.compute()
+    mse_res = mse_metric.compute()
+    print("PCC:", pcc_res)
+    print("MSE:", mse_res)
+    create_cm(total_preds, total_labels, list(range(6)), pcc_res, mse_res, split)
 
 
 # load data, processor and model
-VALID = "./data/nia-10_train/"
-TEST = "./data/nia-10_train/"
+VALID = "./data/valid_ds_small/"
+# TEST = "./data/test_ds/"
 BATCH_SIZE = 64
 SCORE = "compreh"
-MODEL = "./models/NIA_bat=8_lr=0.0001_warm=0.1_type=linear/"
+MODEL = "./models/NIA-ASIA_bat16_lr0.0001_warm0.1/checkpoint-47190"
 valid_ds = load_from_disk(VALID)
-test_ds = load_from_disk(TEST)
+# test_ds = load_from_disk(TEST)
 valid_dataloader = torch.utils.data.DataLoader(
     valid_ds, batch_size=BATCH_SIZE, collate_fn=collate_fn, pin_memory=True
 )
+
+"""
 test_dataloader = torch.utils.data.DataLoader(
     test_ds, batch_size=BATCH_SIZE, collate_fn=collate_fn, pin_memory=True
 )
+"""
 feature_extractor = AutoFeatureExtractor.from_pretrained(MODEL)
 model = AutoModelForAudioClassification.from_pretrained(MODEL, num_labels=6)
 device = "cuda"
@@ -93,8 +97,8 @@ print("MODEL:", MODEL)
 
 print("VALIDSET:", VALID)
 evaluate_metrics(valid_dataloader, split="valid")
-print("TESTSET:", TEST)
-evaluate_metrics(test_dataloader, split="test")
+# print("TESTSET:", TEST)
+# evaluate_metrics(test_dataloader, split="test")
 
 
 print("- Test finished.")
