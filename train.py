@@ -38,11 +38,11 @@ def prepare_arguments():
     parser.add_argument("--num_labels", type=int, default=6)
     parser.add_argument("--train", type=str, default="./data/train_cj_ds/")
     parser.add_argument("--test", type=str, default="./data/valid_cj_ds_small/")
-    parser.add_argument("--per_device_batch_size", type=int, default=4)
+    parser.add_argument("--per_device_batch_size", type=int, default=16)
     parser.add_argument(
         "--model_name_or_path",
         type=str,
-        default="facebook/wav2vec2-xls-r-300m",
+        default="kresnik/wav2vec2-large-xlsr-korean",
         help="N/A",
     )
     parser.add_argument("--learning_rate", type=float, default=1e-4)
@@ -53,7 +53,7 @@ def prepare_arguments():
     parser.add_argument(
         "--greater_is_better",
         type=bool,
-        default=False,
+        default=True,
     )
     parser.add_argument(
         "--exp_prefix",
