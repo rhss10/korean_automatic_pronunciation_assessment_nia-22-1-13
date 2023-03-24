@@ -126,6 +126,7 @@ def prepare_trainer(args, feature_extractor, train_ds, test_ds):
         train_dataset=train_ds,
         eval_dataset=test_ds,
         tokenizer=feature_extractor,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
     )
 
     return trainer

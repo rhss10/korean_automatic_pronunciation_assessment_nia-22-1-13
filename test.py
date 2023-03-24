@@ -1,6 +1,9 @@
 import evaluate
+import matplotlib.pyplot as plt
 import torch
 from datasets import load_dataset, load_from_disk
+from seaborn import heatmap
+from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
 from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
 
@@ -18,10 +21,36 @@ def collate_fn(batch):
     }
 
 
+def create_cm(preds, labels, name_labels, pcc, split):
+    cm = confusion_matrix(preds, labels, labels=name_labels)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    heatmap(
+        cm,
+        annot=True,
+        cmap="Blues",
+        fmt="d",
+        linewidth=0.2,
+        cbar=False,
+        xticklabels=name_labels,
+        yticklabels=name_labels,
+        annot_kws={"size": 5},
+        ax=ax[0, 0],
+    )
+    ax.set(
+        xlabel=f"{split} Pred Labels (PCC:{pcc:.2f})",
+        ylabel=f"{split} Real Labels",
+    )
+    fig.savefig(f"{MODEL}/{SCORE}_{split}.pdf", bbox_inches="tight")
+    fig.savefig(f"{MODEL}/{SCORE}_{split}.png", bbox_inches="tight")
+
+
 # evaluation
-def test(dataloader):
+def evaluate_metrics(dataloader, split):
     pcc_metric = evaluate.load("pearsonr")
     mse_metric = evaluate.load("mse")
+    total_preds = []
+    total_labels = []
+
     for x in tqdm(dataloader):
         with torch.no_grad():
             logits = model(
@@ -30,8 +59,12 @@ def test(dataloader):
         preds = torch.argmax(logits, dim=-1).item()
         pcc_metric.add(prediction=preds, reference=dataloader["labels"])
         mse_metric.add(prediction=preds, reference=dataloader["labels"])
+        total_preds.extend(preds)
+        total_labels.extend(dataloader["labels"])
+
     print("PCC:", pcc_metric.compute())
     print("MSE:", mse_metric.compute())
+    create_cm(total_preds, total_labels, list(range(6)))
 
 
 # load data, processor and model
@@ -59,9 +92,9 @@ print("SCORE:", SCORE)
 print("MODEL:", MODEL)
 
 print("VALIDSET:", VALID)
-test(valid_dataloader)
+evaluate_metrics(valid_dataloader, split="valid")
 print("TESTSET:", TEST)
-test(test_dataloader)
+evaluate_metrics(test_dataloader, split="test")
 
 
 print("- Test finished.")
