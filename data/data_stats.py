@@ -33,13 +33,21 @@ asia_labels = {}
 cj_labels = {}
 
 for i in range(len(eu_ds)):
-    eu_labels[eu_ds[i][SCORE]] = eu_labels.get(eu_ds[i][SCORE], 0) + 1
+    eu_labels["{}".format(eu_ds[i][SCORE])] = (
+        eu_labels.get("{}".format(eu_ds[i][SCORE]), 0) + 1
+    )
 for i in range(len(eng_ds)):
-    eng_labels[eng_ds[i][SCORE]] = eng_labels.get(eng_ds[i][SCORE], 0) + 1
+    eng_labels["{}".format(eng_ds[i][SCORE])] = (
+        eng_labels.get("{}".format(eng_ds[i][SCORE]), 0) + 1
+    )
 for i in range(len(asia_ds)):
-    asia_labels[asia_ds[i][SCORE]] = asia_labels.get(asia_ds[i][SCORE], 0) + 1
+    asia_labels["{}".format(asia_ds[i][SCORE])] = (
+        asia_labels.get("{}".format(asia_ds[i][SCORE]), 0) + 1
+    )
 for i in range(len(cj_ds)):
-    cj_labels[cj_ds[i][SCORE]] = cj_labels.get(cj_ds[i][SCORE], 0) + 1
+    cj_labels["{}".format(cj_ds[i][SCORE])] = (
+        cj_labels.get("{}".format(cj_ds[i][SCORE]), 0) + 1
+    )
 
 
 print(f"==={SCORE} {SPLIT}===")
