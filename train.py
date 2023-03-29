@@ -36,8 +36,8 @@ def prepare_arguments():
         description=("Train and evaluate the model."),
     )
     parser.add_argument("--num_labels", type=int, default=6)
-    parser.add_argument("--train", type=str, default="./data/train_cj_ds/")
-    parser.add_argument("--test", type=str, default="./data/valid_cj_ds_small/")
+    parser.add_argument("--train", type=str, default="./data/train_eu_balanced_ds/")
+    parser.add_argument("--test", type=str, default="./data/val_eu_balanced_ds/")
     parser.add_argument("--per_device_batch_size", type=int, default=16)
     parser.add_argument(
         "--model_name_or_path",
@@ -126,7 +126,7 @@ def prepare_trainer(args, feature_extractor, train_ds, test_ds):
         train_dataset=train_ds,
         eval_dataset=test_ds,
         tokenizer=feature_extractor,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=10)],
     )
 
     return trainer

@@ -1,10 +1,31 @@
-from datasets import load_from_disk, load_dataset
+from datasets import load_dataset, load_from_disk
 
-SCORE = 'compreh'
-eu_ds = load_dataset("csv", delimiter=",", data_files=f"/data1/nia13/eu/{SCORE}/test.csv", split="train")
-eng_ds = load_dataset("csv", delimiter=",", data_files=f"/data1/nia13/eng/{SCORE}/test.csv", split="train")
-asia_ds = load_dataset("csv", delimiter=",", data_files=f"/data1/nia13/asia/{SCORE}/test.csv", split="train")
-cj_ds = load_dataset("csv", delimiter=",", data_files=f"/data1/nia13/cj/{SCORE}/test.csv", split="train")
+SCORE = "compreh"
+SPLIT = "test"
+eu_ds = load_dataset(
+    "csv",
+    delimiter=",",
+    data_files=f"/data1/nia13/eu/{SCORE}/{SPLIT}.csv",
+    split="train",
+)
+eng_ds = load_dataset(
+    "csv",
+    delimiter=",",
+    data_files=f"/data1/nia13/eng/{SCORE}/{SPLIT}.csv",
+    split="train",
+)
+asia_ds = load_dataset(
+    "csv",
+    delimiter=",",
+    data_files=f"/data1/nia13/asia/{SCORE}/{SPLIT}.csv",
+    split="train",
+)
+cj_ds = load_dataset(
+    "csv",
+    delimiter=",",
+    data_files=f"/data1/nia13/cj/{SCORE}/{SPLIT}.csv",
+    split="train",
+)
 
 eu_labels = {}
 eng_labels = {}
@@ -21,7 +42,7 @@ for i in range(len(cj_ds)):
     cj_labels[cj_ds[i][SCORE]] = cj_labels.get(cj_ds[i][SCORE], 0) + 1
 
 
-print(f"==={SCORE}===")
+print(f"==={SCORE} {SPLIT}===")
 print("EU:", eu_labels)
 print("ENG:", eng_labels)
 print("ASIA:", asia_labels)
