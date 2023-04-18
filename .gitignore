@@ -1,3 +1,6 @@
 data/*train*
-data/*valid*
+data/*val*
 data/*test*
+logs/*
+models/*
+ckpts/*

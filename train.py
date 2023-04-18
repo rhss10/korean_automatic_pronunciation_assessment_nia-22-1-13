@@ -8,11 +8,14 @@ from typing import Any, Dict, List, Optional, Union
 import librosa
 import numpy as np
 import torch
+import torch.nn as nn
 import torchaudio
 from addict import Dict as addict
 from datasets import (
     Audio,
+    ClassLabel,
     Dataset,
+    Value,
     concatenate_datasets,
     load_dataset,
     load_from_disk,
@@ -20,8 +23,10 @@ from datasets import (
 )
 from torch.utils.tensorboard import SummaryWriter
 from transformers import (
+    AutoConfig,
     AutoFeatureExtractor,
     AutoModelForAudioClassification,
+    DataCollatorWithPadding,
     EarlyStoppingCallback,
     Trainer,
     TrainingArguments,
@@ -35,14 +40,22 @@ def prepare_arguments():
     parser = argparse.ArgumentParser(
         description=("Train and evaluate the model."),
     )
-    parser.add_argument("--num_labels", type=int, default=6)
-    parser.add_argument("--train", type=str, default="./data/train_eu_balanced_ds/")
-    parser.add_argument("--test", type=str, default="./data/val_eu_balanced_ds/")
+    parser.add_argument("--num_labels", type=int, default=5)
+    parser.add_argument(
+        "--train",
+        type=str,
+        default="/data1/rhss10/speech_corpus/huggingface_dataset/NIA-13/train_ds/",
+    )
+    parser.add_argument(
+        "--test",
+        type=str,
+        default="/data1/rhss10/speech_corpus/huggingface_dataset/NIA-13/valid_ds_small/",
+    )
     parser.add_argument("--per_device_batch_size", type=int, default=16)
     parser.add_argument(
         "--model_name_or_path",
         type=str,
-        default="kresnik/wav2vec2-large-xlsr-korean",
+        default="./checkpoints/eu-checkpoints/",
         help="N/A",
     )
     parser.add_argument("--learning_rate", type=float, default=1e-4)
@@ -66,8 +79,8 @@ def prepare_arguments():
     args.exp_name = f"{args.exp_prefix}_bat{args.per_device_batch_size}_lr{args.learning_rate}_warm{args.warmup_ratio}"
     args.save_dir_path = "./models/" + args.exp_name
     args.save_log_path = "./logs/" + args.exp_name
-    os.makedirs(args.save_dir_path, exist_ok=False)
-    os.makedirs(args.save_log_path, exist_ok=False)
+    os.makedirs(args.save_dir_path, exist_ok=True)
+    os.makedirs(args.save_log_path, exist_ok=True)
 
     return args
 
@@ -91,12 +104,45 @@ def evaluate_metrics(pred):
     return res
 
 
-def prepare_trainer(args, feature_extractor, train_ds, test_ds):
-    model = AutoModelForAudioClassification.from_pretrained(
-        args.model_name_or_path, num_labels=args.num_labels
-    )
+class WeightedSamplingTrainer(Trainer):
+    """
+    Custom Trainer class
 
+    The model should return tuples or subclasses of ModelOutput.
+    (1) your model can compute the loss if a labels argument is provided and that loss is returned as the first element of the tuple (if your model returns tuples)
+    (2) your model can accept multiple label arguments (use the label_names in your TrainingArguments to indicate their name to the Trainer) but none of them should be named "label".
+    """
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.get("labels")
+        # forward pass
+        # print(inputs)
+        outputs = model(**inputs)
+        logits = outputs.get("logits")
+        # compute custom loss (NIA-1-13 APA datasets have 5 labels with different weights)
+        loss_fct = nn.CrossEntropyLoss(
+            weight=torch.tensor([25.0, 5.0, 1.5, 1.0, 3.0]).cuda()
+        )
+        # print(logits)
+        # print(labels)
+        loss = loss_fct(logits, labels)
+        return (loss, outputs) if return_outputs else loss
+
+
+def prepare_trainer(args, feature_extractor, train_ds, test_ds, label2id, id2label):
+    config = AutoConfig.from_pretrained(
+        args.model_name_or_path,
+        num_labels=args.num_labels,
+        # label2id=label2id,
+        # id2label=id2label,
+        # finetuning_task="audio-classification",
+    )
+    model = AutoModelForAudioClassification.from_pretrained(
+        args.model_name_or_path,
+        config=config,
+    )
     model.freeze_feature_extractor()
+    print(model.config)
 
     training_args = TrainingArguments(
         output_dir=args.save_dir_path,
@@ -145,14 +191,23 @@ if __name__ == "__main__":
 
     train_ds = train_ds.map(prepare_dataset)
     valid_ds = valid_ds.map(prepare_dataset)
-    train_ds = train_ds.rename_column("compreh", "labels")
-    valid_ds = valid_ds.rename_column("compreh", "labels")
+    train_ds = train_ds.rename_column("compreh", "label")
+    valid_ds = valid_ds.rename_column("compreh", "label")
 
     mse_metric = load_metric("mse")
     pcc_metric = load_metric("pearsonr")
+    label2id = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4}
+    id2label = {0: 1, 1: 2, 2: 3, 3: 4, 4: 5}
+    train_ds = train_ds.map(lambda x: {"label": label2id[x["label"]]})
+    valid_ds = valid_ds.map(lambda x: {"label": label2id[x["label"]]})
 
     trainer = prepare_trainer(
-        args, feature_extractor, train_ds=train_ds, test_ds=valid_ds
+        args,
+        feature_extractor,
+        train_ds=train_ds,
+        test_ds=valid_ds,
+        label2id=label2id,
+        id2label=id2label,
     )
     train_res = trainer.train()
     trainer.save_model()
