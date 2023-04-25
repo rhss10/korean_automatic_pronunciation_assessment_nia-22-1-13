@@ -1,8 +1,14 @@
+- RW 제외 & TOPIK 제외
+    0. batch + native 
+    1. undersampling
+    2. nonnative, org, nonnative
+    3. weighted sampling
+    4. mse
+- 평균값
 - Comprehensibility/Fluency/Accentedness 대신 토픽 등급으로 모델링
     1. undersampling
     2. nonnative, org, native
 - 1-5 점을 상/중/하로 나누어 모델링
-- mse_metric
 - 2명의 채점자
-- 평균값으로 한번 해볼까??
 - oversampling ==> 단순 cp
+- multi-task
